@@ -1,0 +1,14 @@
+#! /bin/bash
+# Run program, kill it if already runs
+
+if [ $# -eq 0 ]; then
+  exit 0
+fi
+
+echo "foo" >/tmp/log1
+if [ "`ps -fU renau | grep $1 | grep -v grep | grep -v respawn`" != "" ]; then
+  export P=`pgrep -fUrenau -d" " $1`
+  echo $P >/tmp/log1
+  kill -9 `ps $P | grep -v respawn | grep -v PID | cut -c-6`
+fi
+$@;

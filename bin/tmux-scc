@@ -1,0 +1,7 @@
+#!/bin/sh 
+tmux new-session -d -s scc 
+tmux new-window -t scc:2 -n sccstm "bash --init-file $HOME/bin/scc_2"
+tmux new-window -t scc:3 -n tests "bash --init-file $HOME/bin/scc_3"
+tmux new-window -t scc:4 -n makescc "bash --init-file $HOME/bin/scc_4"
+tmux -2 attach-session -t scc
+

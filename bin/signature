@@ -1,0 +1,4 @@
+#!/bin/bash
+echo "---"
+echo
+cat ".signatures/.sig`expr $RANDOM % 49`"

@@ -1,0 +1,9 @@
+#!/bin/sh
+tmux new-session -d -s livehd
+tmux new-window -t livehd:1 -n vim
+tmux new-window -t livehd:2 -n mada4
+tmux new-window -t livehd:3 -n mada4
+tmux new-window -t livehd:4 -n mada0
+tmux new-window -t livehd:5 -n local
+tmux -2u attach-session -t livehd
+

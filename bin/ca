@@ -1,0 +1,80 @@
+#!/bin/bash
+
+#
+# Wrapper around bc for easier use and nicer output.
+#
+# Author: Alex Van't Hof <alexvh@cs.columbia.edu>
+# License: None, Public Domain
+#
+
+PRECISION=${PRECISION:-15} # Allow env based override of precision
+
+usage() {
+	cat << EOF
+Usage: $(basename "$0") [OPTION]... [EQUATION]
+Solve an equation.
+    -d        output in decimal even if EQUATION contains hex numbers
+    -h        output in hex even if EQUATION contains decimal numbers
+    --help    display this text and exit
+
+EQUATION may contain hex numbers so long as they are preceded by '0x'.
+If EQUATION contains a hex number, the output will be in hex if -d is not given.
+See \`man bc\` for legal EQUATION operators.
+
+Default precision is 15 digits. It can be overidden by setting the \$PRECISION
+environment variable.
+EOF
+}
+
+TEMP=$(getopt -o dhs --long help -n calc -- "$@")
+eval set -- "$TEMP"
+
+force_dec=0
+force_hex=0
+while true; do
+	case "$1" in
+	--help) usage; exit 0 ;;
+	-d) shift; force_dec=1 ;;
+	-h) shift; force_hex=1 ;;
+	--) shift; break ;;
+	*) echo "getopt failed" >&2; exit 1 ;;
+	esac
+done
+
+if [ $force_hex -eq 1 ] && [ $# -eq 0 ]; then
+	# Assume user used -h as --help
+	usage
+	exit 0
+fi
+
+piped_input=
+if [ ! -t 0 ]; then
+	read piped_input
+fi
+
+equation="$piped_input $*"
+hex_num=''
+while [[ "$equation" =~ (0x[0-9a-fA-F]+) ]]; do
+	hex_num=${BASH_REMATCH[0]}
+	dec_repl=$(printf "%d\n" "$hex_num")
+	equation=${equation/$hex_num/$dec_repl}
+done
+
+# bc can't handle fractional exponents so convert these to e(exp*l(base))
+equation=$(echo "$equation" | sed -r 's/([0-9]+)\^([0-9]*\.[0-9]+|\([^\)]+\))/e(\2*l(\1))/g')
+
+if [ "$PRECISION" -gt 15 ]; then
+	# High precision hack (%g can only handle 15 digits)
+	result=$(bc -l <<< "scale=$PRECISION; $equation" | tr -d '\n')
+else
+	result=$(bc -l <<< "scale=$PRECISION; $equation" | \
+		 awk '{printf "%.'"$PRECISION"'g\n", $0}')
+fi
+
+if [[ $force_dec -eq 0 && -n "$hex_num" || $force_hex -eq 1 ]]; then
+	# Output using same casing as given (or upper if mixed)
+	[[ "$@" =~ [A-F] ]] && x="X" || x="x"
+	printf "0x%$x\n" "$result"
+else
+	echo "$result"
+fi

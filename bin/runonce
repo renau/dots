@@ -1,0 +1,11 @@
+#! /bin/bash
+# Run program unless it's already running.
+
+if [ $# -eq 0 ]; then
+  exit 0
+fi
+
+IDN=$(id -un)
+if [ ! "$(ps -fU $IDN | grep $1 | grep -v grep | grep -v runonce)" ]; then
+  $@;
+fi
