@@ -14,12 +14,10 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
+
 require("lazy").setup({
   spec = {
-    -- add LazyVim and import its plugins
     { "LazyVim/LazyVim", import = "lazyvim.plugins" },
-    -- import/override with your plugins
-    -- { import = "lazyvim.plugins.extras.coding.copilot" },
     { import = "plugins" },
   },
   defaults = {
@@ -57,6 +55,8 @@ require("lazy").setup({
   --  },
 })
 
+
 require("mini.align").setup()
 require("mini.trailspace").setup()
 --require("overseer").setup()
+--
